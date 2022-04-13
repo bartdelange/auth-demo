@@ -7,28 +7,38 @@ namespace Api.config;
 
 public static class AuthorizationConfig
 {
+    public static TokenValidationParameters GetTokenValidationParameters(string key, string issuer, string audience)
+    {
+        var keyBytes = Encoding.UTF8.GetBytes(key);
+        return new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = issuer,
+            ValidAudience = audience,
+            IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
+        };
+    }
+
     public static void ConfigureAuthorization(this WebApplicationBuilder builder)
     {
         builder.Services.AddAuthorization();
-        builder.Services.AddAuthentication(x =>
-        {
-            x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(o =>
-        {
-            var key = Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]);
-            o.SaveToken = true;
-            o.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = builder.Configuration["JWT:Issuer"],
-                ValidAudience = builder.Configuration["JWT:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(key)
-            };
-        });
+        builder.Services.AddAuthentication(
+                x =>
+                {
+                    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                }
+            )
+            .AddJwtBearer(
+                o =>
+                {
+                    o.SaveToken = true;
+                    o.TokenValidationParameters = GetTokenValidationParameters(builder.Configuration["JWT:Key"], builder.Configuration["JWT:Issuer"], builder.Configuration["JWT:Audience"]);
+                }
+            );
 
         builder.Services.AddSingleton<IJwtManagerRepository, JwtManagerRepository>();
     }

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace Api.attributes;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
-public class RoleAuthorizationAttribute : AuthorizeAttribute, IAuthorizationFilter
+public class RoleAuthorizationAttribute : Attribute, IAuthorizationFilter
 {
     public string[] Roles { get; }
 
@@ -14,10 +14,9 @@ public class RoleAuthorizationAttribute : AuthorizeAttribute, IAuthorizationFilt
     {
         Roles = roles;
     }
-
-    public void OnAuthorization(AuthorizationFilterContext context)
+    
+    public void OnAuthorization(AuthorizationFilterContext context)  
     {
-        Console.Write("rrreeeeeeeeee");
         if (context.ActionDescriptor.EndpointMetadata.Any(em => em.GetType() == typeof(AllowAnonymousAttribute)))
         {
             return;
